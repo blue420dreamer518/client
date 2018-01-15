@@ -1186,22 +1186,30 @@ func usesPerTeamKeys(linkType libkb.LinkType) bool {
 }
 
 func (t *Team) sigTeamItem(ctx context.Context, section SCTeamSection, linkType libkb.LinkType, merkleRoot *libkb.MerkleRoot) (libkb.SigMultiItem, error) {
+	nextSeqno := t.NextSeqno()
+	lastLinkID := t.chain().GetLatestLinkID()
+
+	sig, _, err := t.sigTeamItemRaw(ctx, section, linkType, nextSeqno, lastLinkID, merkleRoot)
+	return sig, err
+}
+
+func (t *Team) sigTeamItemRaw(ctx context.Context, section SCTeamSection, linkType libkb.LinkType, nextSeqno keybase1.Seqno, lastLinkID keybase1.LinkID, merkleRoot *libkb.MerkleRoot) (libkb.SigMultiItem, keybase1.LinkID, error) {
 	me, err := t.loadMe(ctx)
 	if err != nil {
-		return libkb.SigMultiItem{}, err
+		return libkb.SigMultiItem{}, "", err
 	}
 	deviceSigningKey, err := t.G().ActiveDevice.SigningKey()
 	if err != nil {
-		return libkb.SigMultiItem{}, err
+		return libkb.SigMultiItem{}, "", err
 	}
-	latestLinkID, err := libkb.ImportLinkID(t.chain().GetLatestLinkID())
+	latestLinkID, err := libkb.ImportLinkID(lastLinkID)
 	if err != nil {
-		return libkb.SigMultiItem{}, err
+		return libkb.SigMultiItem{}, "", err
 	}
 
-	sig, err := ChangeSig(me, latestLinkID, t.NextSeqno(), deviceSigningKey, section, linkType, merkleRoot)
+	sig, err := ChangeSig(me, latestLinkID, nextSeqno, deviceSigningKey, section, linkType, merkleRoot)
 	if err != nil {
-		return libkb.SigMultiItem{}, err
+		return libkb.SigMultiItem{}, "", err
 	}
 
 	var signingKey libkb.NaclSigningKeyPair
@@ -1209,11 +1217,11 @@ func (t *Team) sigTeamItem(ctx context.Context, section SCTeamSection, linkType 
 	if usesPerTeamKeys(linkType) {
 		signingKey, err = t.keyManager.SigningKey()
 		if err != nil {
-			return libkb.SigMultiItem{}, err
+			return libkb.SigMultiItem{}, "", err
 		}
 		encryptionKey, err = t.keyManager.EncryptionKey()
 		if err != nil {
-			return libkb.SigMultiItem{}, err
+			return libkb.SigMultiItem{}, "", err
 		}
 		if section.PerTeamKey != nil {
 			// need a reverse sig
@@ -1222,7 +1230,7 @@ func (t *Team) sigTeamItem(ctx context.Context, section SCTeamSection, linkType 
 			sig.SetValueAtPath("body.team.per_team_key.reverse_sig", jsonw.NewNil())
 			reverseSig, _, _, err := libkb.SignJSON(sig, signingKey)
 			if err != nil {
-				return libkb.SigMultiItem{}, err
+				return libkb.SigMultiItem{}, "", err
 			}
 			sig.SetValueAtPath("body.team.per_team_key.reverse_sig", jsonw.NewString(reverseSig))
 		}
@@ -1232,12 +1240,12 @@ func (t *Team) sigTeamItem(ctx context.Context, section SCTeamSection, linkType 
 
 	sigJSON, err := sig.Marshal()
 	if err != nil {
-		return libkb.SigMultiItem{}, err
+		return libkb.SigMultiItem{}, "", err
 	}
 	v2Sig, err := makeSigchainV2OuterSig(
 		deviceSigningKey,
 		linkType,
-		t.NextSeqno(),
+		nextSeqno,
 		sigJSON,
 		latestLinkID,
 		false, /* hasRevokes */
@@ -1245,7 +1253,7 @@ func (t *Team) sigTeamItem(ctx context.Context, section SCTeamSection, linkType 
 		false, /* ignoreIfUnsupported */
 	)
 	if err != nil {
-		return libkb.SigMultiItem{}, err
+		return libkb.SigMultiItem{}, "", err
 	}
 
 	sigMultiItem := libkb.SigMultiItem{
@@ -1262,7 +1270,10 @@ func (t *Team) sigTeamItem(ctx context.Context, section SCTeamSection, linkType 
 			Signing:    signingKey.GetKID(),
 		}
 	}
-	return sigMultiItem, nil
+
+	linkID := keybase1.LinkID(libkb.ComputeLinkID(sigJSON).String())
+	fmt.Printf("Posting, prev link ID is %s, cur is %s\n", latestLinkID, linkID)
+	return sigMultiItem, linkID, nil
 }
 
 func (t *Team) recipientBoxes(ctx context.Context, memSet *memberSet) (*PerTeamSharedSecretBoxes, map[keybase1.TeamID]*PerTeamSharedSecretBoxes, *SCPerTeamKey, error) {
