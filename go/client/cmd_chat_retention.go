@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/keybase/cli"
+	"github.com/keybase/client/go/chat"
 	"github.com/keybase/client/go/libcmdline"
 	"github.com/keybase/client/go/libkb"
 	"github.com/keybase/client/go/protocol/chat1"
@@ -76,6 +77,26 @@ func (c *CmdChatSetRetention) Run() (err error) {
 			return err
 		}
 	}
+
+	resolver, err := newChatConversationResolver(c.G())
+	if err != nil {
+		return err
+	}
+	conversation, _, err := resolver.Resolve(ctx, c.resolvingRequest, chatConversationResolvingBehavior{
+		CreateIfNotExists: false,
+		MustNotExist:      false,
+		Interactive:       c.hasTTY,
+		IdentifyBehavior:  keybase1.TLFIdentifyBehavior_CHAT_CLI,
+	})
+	if err != nil {
+		return err
+	}
+	switch conversation.Info.MembersType {
+	case chat1.ConversationMembersType_TEAM:
+		return c.showTeam(conversation)
+	default:
+		return c.showConv(conversation)
+	}
 }
 
 func (c *CmdChatSetRetention) ParseArgv(ctx *cli.Context) (err error) {
@@ -106,4 +127,16 @@ func (c *CmdChatSetRetention) GetUsage() libkb.Usage {
 		Config: true,
 		API:    true,
 	}
+}
+
+func (c *CmdChatSetRetention) showConv(conversation *chat1.ConversationLocal) error {
+	conversation.ConvRetention
+	conversation.TeamRetention
+	panic("@@@ TODO")
+}
+
+func (c *CmdChatSetRetention) showTeam(conversation *chat.ConversationLocal) error {
+	conversation.ConvRetention
+	conversation.TeamRetention
+	panic("@@@ TODO")
 }

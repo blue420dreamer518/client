@@ -1398,6 +1398,24 @@
             "items": "keybase1.TLFIdentifyFailure"
           },
           "name": "identifyFailures"
+        },
+        {
+          "type": "Expunge",
+          "name": "expunge"
+        },
+        {
+          "type": [
+            null,
+            "RetentionPolicy"
+          ],
+          "name": "convRetention"
+        },
+        {
+          "type": [
+            null,
+            "RetentionPolicy"
+          ],
+          "name": "teamRetention"
         }
       ]
     },
