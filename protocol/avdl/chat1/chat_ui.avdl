@@ -61,6 +61,7 @@ protocol chatUi {
     union { null, ConversationCreatorInfoLocal } creatorInfo;
     ConversationVers version;
     MessageID maxMsgID;
+    // @@@ TODO add policies copied from ConversationMetadata
 
     // Finalized convo stuff (KBFS only)
     union { null, ConversationFinalizeInfo } finalizeInfo;
