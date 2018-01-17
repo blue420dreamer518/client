@@ -879,6 +879,7 @@ func (g *PushHandler) HandleOobm(ctx context.Context, obm gregor.OutOfBandMessag
 		return true, g.MembershipUpdate(ctx, obm)
 	case types.PushTeamChannels:
 		return true, g.TeamChannels(ctx, obm)
+		// @@@ TODO handle conv and team retention
 	}
 
 	return false, nil
