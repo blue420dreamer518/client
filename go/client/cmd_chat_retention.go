@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"os"
 
-	"golang.org/x/net/context"
-
 	"github.com/keybase/cli"
 	"github.com/keybase/client/go/libcmdline"
 	"github.com/keybase/client/go/libkb"
@@ -78,16 +76,6 @@ func (c *CmdChatSetRetention) Run() (err error) {
 			return err
 		}
 	}
-
-	return chatSend(context.TODO(), c.G(), ChatSendArg{
-		resolvingRequest: c.resolvingRequest,
-
-		deleteHistory: &chat1.MessageDeleteHistory{
-			Upto: c.upto,
-		},
-
-		hasTTY: c.hasTTY,
-	})
 }
 
 func (c *CmdChatSetRetention) ParseArgv(ctx *cli.Context) (err error) {
