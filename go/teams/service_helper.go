@@ -582,7 +582,7 @@ func RemoveMember(ctx context.Context, g *libkb.GlobalContext, teamname, usernam
 
 		// Ban for open teams only.
 		permanent := t.IsOpen()
-		return t.ChangeMembershipPermanent(ctx, req, permanent)
+		return t.ChangeMembershipPermanent(ctx, req, permanent, nil)
 	})
 }
 
@@ -1112,6 +1112,12 @@ func removeInviteID(ctx context.Context, team *Team, invID keybase1.TeamInviteID
 		Cancel: &cancelList,
 	}
 	return team.postTeamInvites(ctx, invites)
+}
+
+func mootInviteID(ctx context.Context, team *Team, invID keybase1.TeamInviteID, uid keybase1.UID) error {
+	mootMap := make(SCMapInviteIDToUID)
+	mootMap[invID] = uid
+	return team.ChangeMembershipPermanent(ctx, keybase1.TeamChangeReq{}, false, mootMap)
 }
 
 // splitBulk splits on newline or comma.

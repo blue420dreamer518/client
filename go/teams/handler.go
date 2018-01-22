@@ -185,6 +185,11 @@ func handleSBSSingle(ctx context.Context, g *libkb.GlobalContext, teamID keybase
 		}
 
 		if currentRole.IsOrAbove(invite.Role) {
+			if team.IsImplicit() {
+				g.Log.CDebugf(ctx, "This is implicit team SBS resolution, mooting invite.")
+				return mootInviteID(ctx, team, invite.Id, uv.Uid)
+			}
+
 			g.Log.CDebugf(ctx, "User already has same or higher role, canceling invite.")
 			return removeInviteID(ctx, team, invite.Id)
 		}
