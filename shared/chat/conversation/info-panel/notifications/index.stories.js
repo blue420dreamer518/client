@@ -7,7 +7,6 @@ const load = () => {
   storiesOf('Chat/Conversation/InfoPanelNotifications', module)
     .add('Notifications (unsaved)', () => (
       <Notifications
-        hasConversation={true}
         channelWide={false}
         desktop="atmention"
         mobile="never"
@@ -20,7 +19,6 @@ const load = () => {
     ))
     .add('Notifications (saving)', () => (
       <Notifications
-        hasConversation={true}
         channelWide={true}
         desktop="generic"
         mobile="atmention"
@@ -33,7 +31,6 @@ const load = () => {
     ))
     .add('Notifications (saved)', () => (
       <Notifications
-        hasConversation={true}
         channelWide={true}
         desktop="generic"
         mobile="atmention"
