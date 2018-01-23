@@ -4,7 +4,7 @@ import * as Constants from '../../../../constants/chat'
 import * as Types from '../../../../constants/types/chat'
 import * as ChatGen from '../../../../actions/chat-gen'
 import Notifications from '.'
-import {compose, connect, lifecycle, type TypedState} from '../../../../util/container'
+import {compose, connect, type TypedState} from '../../../../util/container'
 import {type DeviceType} from '../../../../constants/types/devices'
 
 type StateProps =
@@ -18,7 +18,7 @@ type StateProps =
   | {||}
 
 type DispatchProps = {|
-  _resetNotificationSaveState: (conversationIDKey: Types.ConversationIDKey) => void,
+  _resetSaveState: (conversationIDKey: Types.ConversationIDKey) => void,
   onSetNotification: (
     conversationIDKey: Types.ConversationIDKey,
     deviceType: DeviceType,
@@ -74,7 +74,7 @@ const mapStateToProps = (state: TypedState): * => {
 }
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
-  _resetNotificationSaveState: (conversationIDKey: Types.ConversationIDKey) =>
+  _resetSaveState: (conversationIDKey: Types.ConversationIDKey) =>
     dispatch(ChatGen.createSetNotificationSaveState({conversationIDKey, saveState: 'unsaved'})),
   onSetNotification: (
     conversationIDKey: Types.ConversationIDKey,
@@ -89,11 +89,11 @@ const mergeProps = (stateProps: StateProps, dispatchProps: DispatchProps) => {
   if (stateProps.conversationIDKey) {
     const {conversationIDKey} = stateProps
     return {
-      _resetNotificationSaveState: () => dispatchProps._resetNotificationSaveState(conversationIDKey),
       hasConversation: !!stateProps.conversationIDKey,
       channelWide: stateProps.channelWide,
       desktop: stateProps.desktop,
       mobile: stateProps.mobile,
+      _resetSaveState: () => dispatchProps._resetSaveState(conversationIDKey),
       saveState: stateProps.saveState,
       onSetDesktop: (notifyType: Types.NotifyType) => {
         dispatchProps.onSetNotification(conversationIDKey, 'desktop', notifyType)
@@ -112,10 +112,5 @@ const mergeProps = (stateProps: StateProps, dispatchProps: DispatchProps) => {
 
 export default compose(
   // $FlowIssue temp
-  connect(mapStateToProps, mapDispatchToProps, mergeProps),
-  lifecycle({
-    componentDidMount: function() {
-      this.props._resetNotificationSaveState && this.props._resetNotificationSaveState()
-    },
-  })
+  connect(mapStateToProps, mapDispatchToProps, mergeProps)
 )(Notifications)
