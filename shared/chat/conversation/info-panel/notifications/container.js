@@ -3,19 +3,19 @@ import logger from '../../../../logger'
 import * as Constants from '../../../../constants/chat'
 import * as Types from '../../../../constants/types/chat'
 import * as ChatGen from '../../../../actions/chat-gen'
-import Notifications from '.'
-import {compose, connect, type TypedState} from '../../../../util/container'
+import {Notifications, type Props} from '.'
+import {connect, type TypedState} from '../../../../util/container'
 import {type DeviceType} from '../../../../constants/types/devices'
 
-type StateProps =
-  | {|
-      channelWide: boolean,
-      conversationIDKey: string,
-      desktop: Types.NotifyType,
-      mobile: Types.NotifyType,
-      saveState: Types.NotificationSaveState,
-    |}
-  | {||}
+type StateProps = {
+  props?: {
+    channelWide: boolean,
+    conversationIDKey: string,
+    desktop: Types.NotifyType,
+    mobile: Types.NotifyType,
+    saveState: Types.NotificationSaveState,
+  },
+}
 
 type DispatchProps = {|
   _resetSaveState: (conversationIDKey: Types.ConversationIDKey) => void,
@@ -44,7 +44,7 @@ const serverStateToProps = (notifications: Types.NotificationsState, type: 'desk
   return 'never'
 }
 
-const mapStateToProps = (state: TypedState): * => {
+const mapStateToProps = (state: TypedState): StateProps => {
   const conversationIDKey = Constants.getSelectedConversation(state)
   if (!conversationIDKey) {
     logger.warn('no selected conversation')
@@ -65,15 +65,17 @@ const mapStateToProps = (state: TypedState): * => {
   const {channelWide} = notifications
 
   return {
-    channelWide,
-    conversationIDKey,
-    desktop,
-    mobile,
-    saveState: inbox.get('notificationSaveState'),
+    props: {
+      channelWide,
+      conversationIDKey,
+      desktop,
+      mobile,
+      saveState: inbox.get('notificationSaveState'),
+    },
   }
 }
 
-const mapDispatchToProps = (dispatch: Dispatch) => ({
+const mapDispatchToProps = (dispatch: Dispatch): DispatchProps => ({
   _resetSaveState: (conversationIDKey: Types.ConversationIDKey) =>
     dispatch(ChatGen.createSetNotificationSaveState({conversationIDKey, saveState: 'unsaved'})),
   onSetNotification: (
@@ -85,32 +87,31 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     dispatch(ChatGen.createToggleChannelWideNotifications({conversationIDKey})),
 })
 
-const mergeProps = (stateProps: StateProps, dispatchProps: DispatchProps) => {
-  if (stateProps.conversationIDKey) {
-    const {conversationIDKey} = stateProps
+const mergeProps = (stateProps: StateProps, dispatchProps: DispatchProps): Props => {
+  if (stateProps.props) {
+    const props = stateProps.props
     return {
-      hasConversation: !!stateProps.conversationIDKey,
-      channelWide: stateProps.channelWide,
-      desktop: stateProps.desktop,
-      mobile: stateProps.mobile,
-      _resetSaveState: () => dispatchProps._resetSaveState(conversationIDKey),
-      saveState: stateProps.saveState,
+      hasConversation: true,
+      channelWide: props.channelWide,
+      desktop: props.desktop,
+      mobile: props.mobile,
+      resetSaveState: () => dispatchProps._resetSaveState(props.conversationIDKey),
+      saveState: props.saveState,
       onSetDesktop: (notifyType: Types.NotifyType) => {
-        dispatchProps.onSetNotification(conversationIDKey, 'desktop', notifyType)
+        dispatchProps.onSetNotification(props.conversationIDKey, 'desktop', notifyType)
       },
       onSetMobile: (notifyType: Types.NotifyType) => {
-        dispatchProps.onSetNotification(conversationIDKey, 'mobile', notifyType)
+        dispatchProps.onSetNotification(props.conversationIDKey, 'mobile', notifyType)
       },
       onToggleChannelWide: () => {
-        dispatchProps.onToggleChannelWide(conversationIDKey)
+        dispatchProps.onToggleChannelWide(props.conversationIDKey)
       },
     }
   } else {
-    return {}
+    return {
+      hasConversation: false,
+    }
   }
 }
 
-export default compose(
-  // $FlowIssue temp
-  connect(mapStateToProps, mapDispatchToProps, mergeProps)
-)(Notifications)
+export default connect(mapStateToProps, mapDispatchToProps, mergeProps)(Notifications)
