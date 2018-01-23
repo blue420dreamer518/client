@@ -58,7 +58,7 @@ const mapStateToProps = (state: TypedState): StateProps => {
   const {channelWide} = notifications
 
   return {
-    props: {
+    _props: {
       channelWide,
       conversationIDKey,
       desktop,
