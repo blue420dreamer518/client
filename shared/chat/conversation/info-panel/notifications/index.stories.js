@@ -10,7 +10,7 @@ const load = () => {
         channelWide={false}
         desktop="atmention"
         mobile="never"
-        resetSaveState={action('resetSaveState')}
+        resetSaveState={() => {}}
         saveState="unsaved"
         onSetDesktop={action('onSetDesktop')}
         onSetMobile={action('onSetMobile')}
@@ -22,7 +22,7 @@ const load = () => {
         channelWide={true}
         desktop="generic"
         mobile="atmention"
-        resetSaveState={action('resetSaveState')}
+        resetSaveState={() => {}}
         saveState="saving"
         onSetDesktop={action('onSetDesktop')}
         onSetMobile={action('onSetMobile')}
@@ -34,7 +34,7 @@ const load = () => {
         channelWide={true}
         desktop="generic"
         mobile="atmention"
-        resetSaveState={action('resetSaveState')}
+        resetSaveState={() => {}}
         saveState="saved"
         onSetDesktop={action('onSetDesktop')}
         onSetMobile={action('onSetMobile')}
